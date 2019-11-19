@@ -50,13 +50,41 @@ app.get('/recipes',
                 resp.status(200).type('application/json').json(answer);
             })
             .catch(error => {
-                res.status(500).type('application/json').json(error);
+                resp.status(500).type('application/json').json(error);
+            })
+    }
+)
+
+// Chuk's: return everything in recipes
+app.get('/receipes',
+    (req, resp) => {
+        const limit = parseInt(req.query.limit) || 2;
+        const offset = parseInt(req.query.offset) || 0;
+
+        const p1 = client.db('food').collection('recipes')
+                        .find({})
+                        .limit(limit).skip(offset)
+                        .toArray();
+        const p2 = client.db('food').collection('recipes')
+                        .find({})
+                        .count();
+
+        Promise.all([ p1, p2 ])
+            .then(result => {
+                resp.status(200).type('application/json')
+                    .json({
+                        recipes: result[0],
+                        offset: offset,
+                        limit: limit,
+                        total: result[1],
+                        timestamp: (new Date()).toString()
+                    })
             })
     }
 )
 
 app.get('/games/rank', 
-    (req,res) => {
+    (req,resp) => {
         const limit = parseInt(req.query.limit) || 25;
         const offset = parseInt(req.query.offset) || 0;
         const p1 = client.db('boardgames').collection('games')
@@ -89,16 +117,16 @@ app.get('/games/rank',
                     timestamp: new Date().getTime()
                 }
                 console.log('answer: ', answer)
-                resp.status(200).type('application/json').json(answer);
+                resp.status(200).type('application/json').json({answer});
             })
             .catch(error => {
-                res.status(500).type('application/json').json(error);
+                resp.status(500).type('application/json').json(error);
             })
     }
 )
 
 app.get('/game/:game_id',
-    (req,res) => {
+    (req,resp) => {
         const game_id = parseInt(req.params.game_id);
         const p1 = client.db('boardgames').collection('games')
             .find({ID: game_id})
@@ -126,7 +154,7 @@ app.get('/game/:game_id',
                 resp.status(200).type('application/json').json(answer);
             })
             .catch(error => {
-                res.status(500).type('application/json').json(error);
+                resp.status(500).type('application/json').json(error);
             })
     })
 
